@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Infera – Smart Security Monitoring</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #17283b;
+      --muted: #647589;
+      --line: #dce4e8;
+      --paper: #f5f7f5;
+      --surface: #fff;
+      --navy: #18334b;
+      --teal: #167c80;
+      --teal-soft: #e5f3f1;
+      --shadow: 0 12px 32px rgba(28, 51, 67, .06);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 82% 0%, rgba(213, 233, 228, .42), transparent 34rem),
+        var(--paper);
+      font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font: inherit; }
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: .9rem max(1.5rem, calc((100% - 1160px) / 2));
+      border-bottom: 1px solid rgba(220, 228, 232, .9);
+      background: rgba(255, 255, 255, .94);
+      backdrop-filter: blur(14px);
+    }
+    nav .logo { color: var(--navy); font-family: Georgia, serif; font-size: 1.55rem; font-weight: 700; letter-spacing: -.06em; }
+    nav .tagline { color: var(--muted); font-size: .83rem; }
+    nav .pill {
+      margin-left: auto;
+      padding: .32rem .75rem;
+      border: 1px solid #c8dfdc;
+      border-radius: 999px;
+      background: var(--teal-soft);
+      color: #17686b;
+      font-size: .73rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .container { width: min(1160px, calc(100% - 3rem)); margin: 0 auto; padding: 2.5rem 0 1rem; }
+    .hero { margin: .2rem 0 2.25rem; }
+    .eyebrow { color: var(--teal); font-size: .72rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; }
+    .hero h1 { margin-top: .45rem; color: var(--navy); font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 4vw, 3rem); font-weight: 500; letter-spacing: -.045em; line-height: 1.15; }
+    .hero p { max-width: 680px; margin-top: .7rem; color: var(--muted); font-size: 1rem; }
+    .grid-2 { display: grid; grid-template-columns: minmax(290px, .82fr) minmax(0, 1.6fr); gap: 1.5rem; }
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      margin-bottom: .85rem;
+      color: var(--navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.18rem;
+      font-weight: 600;
+    }
+    .card {
+      padding: 1.4rem;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+    }
+    .sensor-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .85rem 0; border-bottom: 1px solid #edf0f1; }
+    .sensor-row:last-child { border-bottom: none; }
+    .sensor-label { display: flex; align-items: center; gap: .65rem; color: var(--ink); font-size: .94rem; font-weight: 600; }
+    .toggle { position: relative; display: inline-block; width: 48px; height: 26px; flex: 0 0 auto; }
+    .toggle input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+    .slider { position: absolute; inset: 0; border: 1px solid #cbd5dc; border-radius: 999px; background: #e8edef; cursor: pointer; transition: .2s ease; }
+    .slider::before { position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(20, 40, 55, .2); content: ""; transition: .2s ease; }
+    input:checked + .slider { border-color: var(--teal); background: var(--teal); }
+    input:checked + .slider::before { transform: translateX(22px); }
+    input:focus-visible + .slider { outline: 3px solid rgba(22, 124, 128, .25); outline-offset: 2px; }
+    .toggle-label { min-width: 82px; margin-left: .35rem; color: #7a8995; font-size: .73rem; }
+    input:checked ~ .toggle-label { color: #17686b; }
+    .reading-summary { margin-top: 1rem; padding: .75rem .85rem; border: 1px solid #e3ecea; border-radius: 9px; background: #f5f9f8; color: var(--muted); font-size: .8rem; }
+    .reading-summary strong { color: var(--navy); }
+    #predict-btn {
+      width: 100%;
+      margin-top: 1.25rem;
+      padding: .82rem 1rem;
+      border: 0;
+      border-radius: 9px;
+      background: var(--navy);
+      color: white;
+      font-size: .91rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    #predict-btn:hover { transform: translateY(-1px); background: #214864; box-shadow: 0 6px 16px rgba(24, 51, 75, .18); }
+    #predict-btn:active { transform: translateY(0); }
+    #predict-btn:focus-visible, .tab-btn:focus-visible { outline: 3px solid rgba(22, 124, 128, .3); outline-offset: 2px; }
+    #result-panel { display: none; }
+    #result-panel.visible { display: block; }
+    .prob-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .8rem; margin-bottom: 1rem; }
+    .prob-card { padding: 1rem .7rem; border: 1px solid var(--line); border-radius: 11px; background: #fff; text-align: center; }
+    .prob-card .pct { font-family: Georgia, serif; font-size: clamp(1.45rem, 3vw, 2rem); font-weight: 700; letter-spacing: -.04em; }
+    .prob-card .lbl { margin-top: .15rem; color: var(--muted); font-size: .76rem; }
+    .prob-no-entry .pct { color: #3974a0; }
+    .prob-authorized .pct { color: #32816b; }
+    .prob-intrusion .pct { color: #c35c3c; }
+    .risk-banner { display: flex; align-items: flex-start; gap: .8rem; margin-bottom: 1rem; padding: 1rem 1.1rem; border: 1px solid transparent; border-radius: 10px; }
+    .risk-banner.low { border-color: #cfe7d9; border-left: 4px solid #32816b; background: #f0f8f3; }
+    .risk-banner.moderate { border-color: #f0e2bd; border-left: 4px solid #b17a22; background: #fbf7eb; }
+    .risk-banner.high { border-color: #efcfca; border-left: 4px solid #b74f45; background: #fbf1ef; }
+    .risk-banner .risk-level { font-size: 1rem; font-weight: 750; }
+    .risk-banner.low .risk-level { color: #267155; }
+    .risk-banner.moderate .risk-level { color: #916119; }
+    .risk-banner.high .risk-level { color: #a63e36; }
+    .risk-banner .action { margin-top: .2rem; color: #596a78; font-size: .87rem; }
+    #chart-img { display: block; width: 100%; border: 1px solid var(--line); border-radius: 10px; background: white; padding: .4rem; }
+    .tabs { display: flex; flex-wrap: wrap; gap: .45rem; margin-bottom: 1.1rem; padding-bottom: .75rem; border-bottom: 1px solid var(--line); }
+    .tab-btn { padding: .48rem .85rem; border: 1px solid transparent; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; font-size: .82rem; transition: .2s; }
+    .tab-btn:hover { background: #f2f6f5; color: var(--navy); }
+    .tab-btn.active { border-color: #c8dfdc; background: var(--teal-soft); color: #17686b; font-weight: 700; }
+    .tab-pane { display: none; overflow-x: auto; }
+    .tab-pane.active { display: block; }
+    table { width: 100%; border-collapse: collapse; font-size: .84rem; white-space: nowrap; }
+    th, td { padding: .72rem .85rem; border-bottom: 1px solid #e8edef; text-align: left; }
+    th { background: #f4f7f7; color: #41576a; font-size: .74rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    tbody tr:hover { background: #f8faf9; }
+    td.best { color: #267155; font-weight: 700; }
+    td.worst { color: #b65b3e; }
+    .eval-img { width: 100%; margin-top: .5rem; padding: .4rem; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+    .dataset-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; align-items: center; }
+    .stat-bar-wrap { margin-bottom: .8rem; }
+    .stat-label { display: flex; justify-content: space-between; gap: .5rem; margin-bottom: .25rem; color: var(--muted); font-size: .8rem; }
+    .bar-track { height: 8px; overflow: hidden; border-radius: 999px; background: #e9eeee; }
+    .bar-fill { height: 8px; border-radius: 999px; }
+    .bar-no-entry { background: #5685a7; }
+    .bar-authorized { background: #4b967d; }
+    .bar-intrusion { background: #cf7954; }
+    .cpt-block { margin-bottom: .8rem; padding: 1rem; border: 1px solid #e6eceb; border-radius: 9px; background: #f8faf9; }
+    .cpt-var { margin-bottom: .45rem; color: #17686b; font-weight: 700; }
+    .cpt-block pre { overflow-x: auto; color: #526371; font-size: .75rem; white-space: pre-wrap; }
+    .spinner { display: none; padding: 2rem; text-align: center; }
+    .spinner.visible { display: block; }
+    .spinner-ring { display: inline-block; width: 36px; height: 36px; border: 3px solid #dfe9e7; border-top-color: var(--teal); border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    footer { margin-top: 1rem; padding: 1.8rem; border-top: 1px solid var(--line); color: #7c8a93; font-size: .78rem; text-align: center; }
+    @media (max-width: 760px) {
+      nav { padding: .8rem 1rem; }
+      nav .tagline { display: none; }
+      .container { width: min(100% - 2rem, 620px); padding-top: 1.7rem; }
+      .grid-2 { grid-template-columns: 1fr; gap: 1.8rem; }
+      .dataset-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 420px) {
+      nav .pill { padding: .27rem .55rem; font-size: .64rem; }
+      .card { padding: 1rem; }
+      .prob-grid { gap: .45rem; }
+      .prob-card { padding: .8rem .35rem; }
+      .toggle-label { min-width: 72px; font-size: .68rem; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────────────────── -->
+<nav>
+  <span class="logo">Infera</span>
+  <span class="tagline">Intelligent Intrusion Detection &amp; Risk Prediction</span>
+  <span class="pill">Bayesian Network</span>
+</nav>
+
+<div class="container">
+
+  <header class="hero">
+    <div class="eyebrow">Probabilistic security research</div>
+    <h1>Intelligent intrusion detection</h1>
+    <p>Explore how sensor observations inform building-entry risk estimates through a Bayesian Network model.</p>
+  </header>
+
+  <!-- ── MAIN GRID ──────────────────────────────────────────────────── -->
+  <div class="grid-2" style="margin-bottom:2.5rem">
+
+    <!-- LEFT: Sensor Input -->
+    <div>
+      <div class="section-title">Sensor Observations</div>
+      <div class="card">
+        <!-- Door -->
+        <div class="sensor-row">
+          <div class="sensor-label">
+            <span>Door Sensor</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <label class="toggle">
+              <input type="checkbox" id="door-toggle">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label" id="door-lbl">Not Triggered</span>
+          </div>
+        </div>
+        <!-- Motion -->
+        <div class="sensor-row">
+          <div class="sensor-label">
+            <span>Motion Sensor</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <label class="toggle">
+              <input type="checkbox" id="motion-toggle">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label" id="motion-lbl">Not Triggered</span>
+          </div>
+        </div>
+        <!-- Glass -->
+        <div class="sensor-row">
+          <div class="sensor-label">
+            <span>Glass-Break Sensor</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <label class="toggle">
+              <input type="checkbox" id="glass-toggle">
+              <span class="slider"></span>
+            </label>
+            <span class="toggle-label" id="glass-lbl">Not Triggered</span>
+          </div>
+        </div>
+
+        <!-- Current state summary -->
+        <div class="reading-summary">
+          <strong>Current reading:</strong>
+          <span id="summary-text" style="margin-left:.5rem">Door: Off · Motion: Off · Glass: Off</span>
+        </div>
+
+        <button id="predict-btn">Predict Intrusion Risk</button>
+      </div>
+
+      <!-- Risk Scale -->
+      <div class="card" style="margin-top:1.2rem;">
+        <div class="section-title">Risk Thresholds</div>
+        <div style="font-size:.88rem; line-height:2;">
+          <div><span style="color:#267155">Low</span> &nbsp;— Intrusion probability &lt; 30%</div>
+          <div><span style="color:#916119">Moderate</span> — 30% to 69.9%</div>
+          <div><span style="color:#a63e36">High</span> &nbsp;— ≥ 70%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Results -->
+    <div>
+      <div class="section-title">Risk Assessment</div>
+
+      <!-- Spinner -->
+      <div class="spinner" id="spinner">
+        <div class="spinner-ring"></div>
+        <div style="color:#64748b;margin-top:.7rem;font-size:.85rem">Running Bayesian inference…</div>
+      </div>
+
+      <!-- Placeholder -->
+      <div id="placeholder" class="card" style="text-align:center; padding:3rem; color:#647589;">
+        <div style="color:#18334b;font-family:Georgia,serif;font-size:1.2rem;font-weight:600">Awaiting sensor input</div>
+        <div style="margin-top:.7rem">Select sensor states and click <strong style="color:#17686b">Predict</strong> to see results.</div>
+      </div>
+
+      <!-- Results -->
+      <div id="result-panel">
+        <!-- Probability cards -->
+        <div class="prob-grid">
+          <div class="prob-card prob-no-entry">
+            <div class="pct" id="pct-no-entry">—</div>
+            <div class="lbl">No Entry</div>
+          </div>
+          <div class="prob-card prob-authorized">
+            <div class="pct" id="pct-authorized">—</div>
+            <div class="lbl">Authorized</div>
+          </div>
+          <div class="prob-card prob-intrusion">
+            <div class="pct" id="pct-intrusion">—</div>
+            <div class="lbl">Intrusion</div>
+          </div>
+        </div>
+
+        <!-- Risk Banner -->
+        <div class="risk-banner" id="risk-banner">
+          <div>
+            <div class="risk-level" id="risk-level-text">—</div>
+            <div class="action"     id="risk-action-text">—</div>
+          </div>
+        </div>
+
+        <!-- Chart -->
+        <img id="chart-img" alt="Probability distribution chart" style="display:none"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── EVALUATION SECTION ─────────────────────────────────────────── -->
+  <div class="section-title">Model Evaluation</div>
+  <div class="card" style="margin-bottom:2.5rem">
+
+    <div class="tabs" id="eval-tabs">
+      <button class="tab-btn active" data-tab="tab-metrics">Metrics</button>
+      <button class="tab-btn"        data-tab="tab-compare">Comparison Chart</button>
+      <button class="tab-btn"        data-tab="tab-cm">Confusion Matrices</button>
+    </div>
+
+    <!-- Metrics Table -->
+    <div class="tab-pane active" id="tab-metrics">
+      {% if metrics %}
+      <table>
+        <thead>
+          <tr>
+            {% for col in metrics[0].keys() %}<th>{{ col }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in metrics %}
+          <tr>
+            {% for col, val in row.items() %}
+              {% if col == 'Model' %}
+                <td><strong>{{ val }}</strong></td>
+              {% elif col == 'FPR (%)' %}
+                {# Lower FPR is better: highlight min #}
+                {% set vals = metrics | map(attribute=col) | list %}
+                {% if val == vals | min %}
+                  <td class="best">{{ val }}</td>
+                {% else %}
+                  <td class="worst">{{ val }}</td>
+                {% endif %}
+              {% else %}
+                {# Higher is better #}
+                {% set vals = metrics | map(attribute=col) | list %}
+                {% if val == vals | max %}
+                  <td class="best">{{ val }}</td>
+                {% else %}
+                  <td>{{ val }}</td>
+                {% endif %}
+              {% endif %}
+            {% endfor %}
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p style="font-size:.78rem;color:#64748b;margin-top:.7rem">
+        Green text = better score for each metric &nbsp;|&nbsp; Weighted averages on 4,000-record test set
+      </p>
+      {% else %}
+      <p style="color:#64748b">Run <code>evaluate.py</code> to generate metrics.</p>
+      {% endif %}
+    </div>
+
+    <!-- Comparison Chart -->
+    <div class="tab-pane" id="tab-compare">
+      {% if plots.comparison_metrics %}
+        <img class="eval-img" src="data:image/png;base64,{{ plots.comparison_metrics }}" alt="Comparison chart"/>
+      {% else %}
+        <p style="color:#64748b">Run <code>evaluate.py</code> to generate charts.</p>
+      {% endif %}
+    </div>
+
+    <!-- Confusion Matrices -->
+    <div class="tab-pane" id="tab-cm">
+      {% if plots.confusion_matrices %}
+        <img class="eval-img" src="data:image/png;base64,{{ plots.confusion_matrices }}" alt="Confusion matrices"/>
+      {% else %}
+        <p style="color:#64748b">Run <code>evaluate.py</code> to generate charts.</p>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ── DATASET SECTION ────────────────────────────────────────────── -->
+  <div class="section-title">Training Dataset</div>
+  <div class="card" style="margin-bottom:2.5rem">
+    {% if dataset_stats %}
+    <div class="dataset-grid">
+      <div>
+        <p style="color:#94a3b8;font-size:.88rem;margin-bottom:1rem">
+          Total records: <strong style="color:#e0e0e0">{{ dataset_stats.total }}</strong>
+        </p>
+        <div class="stat-bar-wrap">
+          <div class="stat-label">
+            <span>No Entry</span><span>{{ dataset_stats.no_entry.count }} ({{ dataset_stats.no_entry.pct }}%)</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-no-entry" style="width:{{ dataset_stats.no_entry.pct }}%"></div></div>
+        </div>
+        <div class="stat-bar-wrap">
+          <div class="stat-label">
+            <span>Authorized</span><span>{{ dataset_stats.authorized.count }} ({{ dataset_stats.authorized.pct }}%)</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-authorized" style="width:{{ dataset_stats.authorized.pct }}%"></div></div>
+        </div>
+        <div class="stat-bar-wrap">
+          <div class="stat-label">
+            <span>Intrusion</span><span>{{ dataset_stats.intrusion.count }} ({{ dataset_stats.intrusion.pct }}%)</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-intrusion" style="width:{{ dataset_stats.intrusion.pct }}%"></div></div>
+        </div>
+      </div>
+      {% if plots.class_distribution %}
+      <div>
+        <img class="eval-img" src="data:image/png;base64,{{ plots.class_distribution }}" alt="Class distribution"/>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- ── CPT SECTION ────────────────────────────────────────────────── -->
+  <div class="section-title">Conditional Probability Tables</div>
+  <div class="card" style="margin-bottom:2.5rem">
+    {% for cpd in cpt_data %}
+    <div class="cpt-block">
+      <div class="cpt-var">Node: {{ cpd.variable }}</div>
+      <pre>{{ cpd.table }}</pre>
+    </div>
+    {% endfor %}
+  </div>
+
+</div><!-- /container -->
+
+<footer>Infera © 2026 · Intelligent Intrusion Detection using Bayesian Networks · Python · pgmpy · Flask</footer>
+
+<!-- ── JavaScript ──────────────────────────────────────────────────── -->
+<script>
+  /* Toggle labels */
+  const toggles = [
+    { id: 'door-toggle',   lblId: 'door-lbl'   },
+    { id: 'motion-toggle', lblId: 'motion-lbl' },
+    { id: 'glass-toggle',  lblId: 'glass-lbl'  },
+  ];
+  function updateSummary(){
+    const d = document.getElementById('door-toggle').checked;
+    const m = document.getElementById('motion-toggle').checked;
+    const g = document.getElementById('glass-toggle').checked;
+    document.getElementById('summary-text').textContent =
+      `Door: ${d?'ON':'Off'} · Motion: ${m?'ON':'Off'} · Glass: ${g?'ON':'Off'}`;
+  }
+  toggles.forEach(t => {
+    const cb  = document.getElementById(t.id);
+    const lbl = document.getElementById(t.lblId);
+    cb.addEventListener('change', () => {
+      lbl.textContent = cb.checked ? 'Triggered' : 'Not Triggered';
+      updateSummary();
+    });
+  });
+
+  /* Predict */
+  document.getElementById('predict-btn').addEventListener('click', async () => {
+    const door   = document.getElementById('door-toggle').checked   ? 1 : 0;
+    const motion = document.getElementById('motion-toggle').checked ? 1 : 0;
+    const glass  = document.getElementById('glass-toggle').checked  ? 1 : 0;
+
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('result-panel').classList.remove('visible');
+    document.getElementById('spinner').classList.add('visible');
+
+    try {
+      const resp = await fetch('/predict', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({door, motion, glass})
+      });
+      const data = await resp.json();
+
+      document.getElementById('pct-no-entry').textContent   = data.no_entry   + '%';
+      document.getElementById('pct-authorized').textContent = data.authorized + '%';
+      document.getElementById('pct-intrusion').textContent  = data.intrusion  + '%';
+
+      const banner = document.getElementById('risk-banner');
+      banner.className = 'risk-banner ' + data.risk_level.toLowerCase();
+      document.getElementById('risk-level-text').textContent =
+        'Risk Level: ' + data.risk_level;
+      document.getElementById('risk-action-text').textContent = data.recommended_action;
+
+      const img = document.getElementById('chart-img');
+      img.src = 'data:image/png;base64,' + data.chart_b64;
+      img.style.display = 'block';
+
+    } finally {
+      document.getElementById('spinner').classList.remove('visible');
+      document.getElementById('result-panel').classList.add('visible');
+    }
+  });
+
+  /* Tabs */
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+  });
+</script>
+</body>
+</html>
